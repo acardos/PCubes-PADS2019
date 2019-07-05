@@ -244,7 +244,7 @@ def model(request, log_id, cube_id):
         trace_ids = list(map(lambda t: ObjectId(t), trace_ids))
         all_events = event_collection.find({'trace:_id' : {"$in": trace_ids}})
 
-    print("Number of events: {}".format(all_events.count()))
+    # print("Number of events: {}".format(all_events.count()))
 
     t1 = time()
     traces = groupby(all_events, key=lambda e: e['trace:_id'])
