@@ -19,6 +19,9 @@
                     </a>
                 </div>
                 <div class="col">
+                    Case-level: {{ cube.case_level }}
+                </div>
+                <div class="col">
                     <form action="{{log.pk}}/cube/{{ cube.pk }}/delete" method="POST">
                         {% csrf_token %}
                         <button class="btn btn-danger float-right" type="submit">Delete</button>

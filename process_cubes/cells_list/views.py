@@ -13,7 +13,7 @@ import math
 import os
 from time import time
 from itertools import groupby
-
+from bson.objectid import ObjectId  
 ##
 from pm4py.objects import log as log_lib
 from pm4py.algo.discovery.alpha import factory as alpha_miner
@@ -238,46 +238,31 @@ def model(request, log_id, cube_id):
     t2 = time()
     print("Time to get events: {}".format(t2 - t1))
 
+    cube = ProcessCube.objects.get(pk=cube_id)
+    if(cube.case_level):
+        trace_ids = {e['trace:_id'] for e in all_events}
+        trace_ids = list(map(lambda t: ObjectId(t), trace_ids))
+        all_events = event_collection.find({'trace:_id' : {"$in": trace_ids}})
+
+    print("Number of events: {}".format(all_events.count()))
+
     t1 = time()
     traces = groupby(all_events, key=lambda e: e['trace:_id'])
     t2 = time()
     print("Time to get traces: {}".format(t2 - t1))
+    
 
     t1 = time()
     traces = [log_lib.log.Trace(g) for k, g in traces]
     t2 = time()
     print("Time to make list: {}".format(t2 - t1))
 
-    # log_list = [log_lib.log.Trace([log_lib.log.Event(t_e) for t_e in all_events if t_e['trace:_id'] == db_trace['_id']]) for db_trace in db_traces]
-
+    print("Number of traces: {}".format(len(traces)))
+    
     t1 = time()
     log = log_lib.log.EventLog(traces)
     t2 = time()
     print("Time to make event log: {}".format(t2 - t1))
-
-    # for db_trace in db_traces:
-
-    #     pm4py_trace = log_lib.log.Trace([log_lib.log.Event(t_e) for t_e in all_events if t_e['trace:_id'] == db_trace['_id']])
-
-    #     log.append(pm4py_trace)
-    #     print(len(log))
-
-    # pm_events = []
-    # traces = {str(e['trace:_id']): log_lib.log.Trace() for e in events}
-
-    # for event in events:
-    #     trace = trace_collection.find_one({"_id": event['trace:_id']})
-
-    #     t = traces[str(event['trace:_id'])]
-    #     del event['_id']
-    #     del event['trace:_id']
-
-    #     e = log_lib.log.Event(event)
-    #     t.append(e)
-
-    # log.append(traces.items())
-    # for trace in traces:
-    #     log.append(traces[trace])
 
     parameters = {"format": "svg"}
 

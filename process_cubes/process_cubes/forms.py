@@ -5,4 +5,4 @@ class CubeForm(forms.ModelForm):
 
     class Meta:
         model = ProcessCube
-        fields = ('name',)
+        fields = ('name', 'case_level')

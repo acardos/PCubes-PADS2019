@@ -18,6 +18,7 @@ class EventLog(models.Model):
 class ProcessCube(models.Model):
     name = models.CharField(max_length=255)
     log = models.ForeignKey(to=EventLog, on_delete=models.CASCADE)
+    case_level = models.BooleanField(default=False)
 
     def get_num_cells(self):
         num = 1
