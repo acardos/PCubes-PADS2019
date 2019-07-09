@@ -2,9 +2,9 @@
 {% load crispy_forms_tags %}
 {% block content %}
 
- <div class="row">
+<div class="row">
     <div class="col-sm">
-      <h1>Dice Dimension: {{ dimension.name }}</h1>
+        <h1>Dice Dimension: {{ dimension.name }}</h1>
     </div>
     <div class="col-sm" id="existing_dice">
         {% if slice %}
@@ -14,11 +14,11 @@
         <h1><span class="badge badge-secondary">Editing existing dice</span></h1>
         {% endif %}
     </div>
-    
+
     <div class="col-1 text-right">
         <button class="btn btn-success btn-lg btn-block" onclick="submit_dice()">Dice</button>
     </div>
-  </div>
+</div>
 <table id="log_table" class="table display nowrap table-striped" style="width: 100%">
     <thead class="thead-dark">
         <tr>
@@ -55,7 +55,7 @@
 
 {% block custom_javascript %}
 <script>
-    var dice = {{dice | safe }}
+    var dice = {{ dice | safe }}
     console.log(dice);
 
     function arraysEqual(a, b) {
@@ -68,23 +68,22 @@
         return true;
     }
 
-    function selectRows(){
-        var table = $('#log_table').DataTable();
-        table.rows().every(function(rowIdx, tableLoop, rowLoop){
-        var change = false;
-        var data = this.data().slice(1, this.data().length);
-        dice.forEach(function(item, index){
-            if(arraysEqual(item, data)){
-                change = true;
+    function selectRows(table) {
+        table.rows().every(function (rowIdx, tableLoop, rowLoop) {
+            var change = false;
+            var data = this.data().slice(1, this.data().length);
+            dice.forEach(function (item, index) {
+                if (arraysEqual(item, data)) {
+                    change = true;
+                }
+            });
+
+            if (change) {
+                this.select();
             }
-        });
-        
-        if(change){
-            this.select();
-        }
-        else{
-            this.deselect();
-        }
+            else {
+                this.deselect();
+            }
         });
     }
 
@@ -102,60 +101,58 @@
 
     $(document).ready(function () {
 
-        var attributes2 = [
-            { data: "Select" }, {% for attr in attr_names %} { "data": "{{ attr}}" }, {% endfor %}];
-
-         var dim_values = {{ dim_values| safe }}
-
-    $('#log_table tfoot th').slice(1).each(function () {
-        var title = $(this).text().trim();
-        $(this).html('<form>' + 
-            '<div class="form-group">'+
-            '<label for="' + title +'_input">Search ' + title + '</label>' + 
-            '<input type="text" id="'+title + '_input"class="form-control" placeholder="type value" />'+
-            '</div></form>');
-    });
-
-    var table = $('#log_table').DataTable({
-        "processing": true,
-        "deferRender": true,
-        // "ajax": "{% url 'get-events' log.id %}",
-        "data": dim_values,
-        "scrollX": true,
-        "columnDefs": [
-            {
-                "defaultContent": "",
-                "targets": "_all"
-            },
-            {
-                "data": null,
-                orderable: false,
-                className: 'select-checkbox',
-                targets: 0,
-                width: 100
-            }
-        ],
-        select: {
-            style: 'multi+shift',
-        },
-        order: [[1, 'asc']],
-        // columns: attributes2
-    });
-
-    // Apply the search
-    table.columns().every(function () {
-        var that = this;
-
-        $('input', this.footer()).on('keyup change', function () {
-            if (that.search() !== this.value) {
-                that
-                    .search(this.value)
-                    .draw();
-            }
+        $('#log_table tfoot th').slice(1).each(function () {
+            var title = $(this).text().trim();
+            $(this).html('<form>' +
+                '<div class="form-group">' +
+                '<label for="' + title + '_input">Search ' + title + '</label>' +
+                '<input type="text" id="' + title + '_input"class="form-control" placeholder="type value" />' +
+                '</div></form>');
         });
-    });
 
-    selectRows();
+        var table = $('#log_table').DataTable({
+            "processing": true,
+            "deferRender": true,
+            "ajax": {
+                url: "{% url 'get-dim-values' log.id cube.id dimension.id %}",
+                dataSrc: ""
+            },
+            "scrollX": true,
+            "columnDefs": [
+                {
+                    "defaultContent": "",
+                    data: null,
+                    orderable: false,
+                    searchable: false,
+                    className: 'select-checkbox',
+                    targets: 0,
+                    width: 100
+                },
+            ],
+            initComplete: function (settings, json) {
+                let api = new $.fn.dataTable.Api(settings);
+
+                selectRows(api)
+            },
+            select: {
+                style: 'multi+shift',
+            },
+            order: [[1, 'asc']],
+        });
+
+        // Apply the search
+        table.columns().every(function () {
+            var that = this;
+
+            $('input', this.footer()).on('keyup change', function () {
+                if (that.search() !== this.value) {
+                    that
+                        .search(this.value)
+                        .draw();
+                }
+            });
+        });
+
     });
 
     $('#log_table_row').on("show.bs.collapse", function (e) {
@@ -184,11 +181,11 @@
     function submit_dice() {
         // console.log(selected)
         var table = $('#log_table').DataTable();
-        var selected = table.rows({selected : true}).data().toArray();
-        console.log("selected",selected);
+        var selected = table.rows({ selected: true }).data().toArray();
+        console.log("selected", selected);
         var data = [];
         for (var i = 0; i < selected.length; i++) {
-            data.push(JSON.stringify(selected[i].slice(1,selected[i].length)));
+            data.push(JSON.stringify(selected[i].slice(1, selected[i].length)));
         }
 
         $.ajax({

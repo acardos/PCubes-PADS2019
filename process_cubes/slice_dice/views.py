@@ -3,7 +3,7 @@ import json
 from django.core.serializers.json import DjangoJSONEncoder
 import numbers
 from import_xes.models import EventLog, Attribute, ProcessCube, Dimension
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from .models import AttributeRestriction, Slice, Dice, DimensionRestriction
 from .forms import DateFilter, NumberFilter, StringFilter
 import datetime
@@ -84,6 +84,13 @@ def slice_operation(request, log_id, cube_id, dim_id):
 def dice_operation(request, log_id, cube_id, dim_id):
     return operation(request, log_id, cube_id, dim_id, 'slice_dice/dice.html')
 
+def get_dim_values_json(request, log_id, cube_id, dim_id):
+    dimension = Dimension.objects.get(pk=dim_id)
+    dim_values = get_dim_values(dimension)
+
+    dim_values = [[[]] + v for v in dim_values]
+
+    return JsonResponse(dim_values, safe=False)
 
 def save_dice(request, log_id, cube_id, dim_id):
 
